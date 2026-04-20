@@ -158,6 +158,37 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .note{font-size:12px;color:var(--warn);margin-bottom:4px;line-height:1.6;opacity:.8}
 
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* COMMENT LOG */
+.clog{background:var(--bg-card);border:1px solid var(--border-sub);border-radius:8px;padding:0;margin-top:18px;box-shadow:0 1px 4px var(--shadow);overflow:hidden}
+.clog-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border-sub);gap:10px}
+.clog-ttl{font-size:12px;font-weight:600;color:var(--text-muted);font-family:'IBM Plex Mono',monospace}
+.clog-count{font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace}
+.clog-body{max-height:320px;overflow-y:auto;padding:0}
+.clog-empty{text-align:center;padding:24px;font-size:12px;color:var(--text-dim);font-style:italic}
+.clog-item{display:flex;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border-sub);transition:background .1s}
+.clog-item:last-child{border-bottom:none}
+.clog-item:hover{background:var(--bg-hover)}
+.clog-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--on-accent);flex-shrink:0;margin-top:1px;text-transform:uppercase}
+.clog-main{flex:1;min-width:0}
+.clog-meta{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap}
+.clog-name{font-size:12px;font-weight:600;color:var(--text);font-family:'IBM Plex Mono',monospace}
+.clog-time{font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace}
+.clog-tag{font-size:10px;color:var(--on-accent);background:var(--accent-dim);padding:1px 6px;border-radius:3px;font-family:'IBM Plex Mono',monospace}
+.clog-tag.save{background:#1d6a9e}
+.clog-tag.note{background:#7c3aed}
+.clog-text{font-size:13px;color:var(--text-muted);line-height:1.5;word-break:break-word}
+.clog-del{font-size:10px;color:var(--text-dim);cursor:pointer;padding:2px 5px;border-radius:3px;background:transparent;border:none;opacity:0;transition:opacity .1s;flex-shrink:0;align-self:flex-start;margin-top:2px}
+.clog-item:hover .clog-del{opacity:1}
+.clog-del:hover{background:rgba(239,68,68,.12);color:#f87171}
+.clog-input-wrap{padding:10px 16px;border-top:1px solid var(--border-sub);display:flex;gap:8px;align-items:flex-end}
+.clog-name-inp{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text);background:var(--bg-hover);border:1px solid var(--border-sub);border-radius:5px;padding:6px 9px;width:110px;flex-shrink:0;transition:border-color .15s}
+.clog-name-inp:focus{outline:none;border-color:var(--accent)}
+.clog-txt-inp{flex:1;font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:var(--text);background:var(--bg-hover);border:1px solid var(--border-sub);border-radius:5px;padding:6px 9px;resize:none;min-height:36px;max-height:100px;transition:border-color .15s;line-height:1.5}
+.clog-txt-inp:focus{outline:none;border-color:var(--accent)}
+.clog-send{background:var(--accent);color:var(--on-accent);border:none;border-radius:5px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;transition:opacity .15s;flex-shrink:0;font-family:'IBM Plex Sans Thai',sans-serif;align-self:flex-end}
+.clog-send:hover{opacity:.85}
+.clog-send:disabled{opacity:.4;cursor:not-allowed}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-thumb{background:var(--border-sub);border-radius:3px}
 
@@ -204,6 +235,23 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div class="note">• PVT ต้องปรับเป็นการซื้อมากกว่า 24 ชม. เพื่อเป็น Stock ของ Warehouse (เดิม 2–24 ชม. ใช้ stock สนามบินเชียงใหม่)</div>
     <div class="note">• Article ที่ใช้ใน Test ให้ PO คุยเพิ่มเติมกับแต่ละ Channel อีกครั้ง</div>
     <div class="note">• KPD Online ไม่รวมในรอบ Manual STO — ใช้ Auto-gen STO ตามปกติสำหรับ Flight date ตั้งแต่ 25 Apr</div>
+  </div>
+</div>
+
+  <!-- COMMENT LOG -->
+  <div class="clog">
+    <div class="clog-hdr">
+      <span class="clog-ttl">📋 Update Log</span>
+      <span class="clog-count" id="clogCount">0 entries</span>
+    </div>
+    <div class="clog-body" id="clogBody">
+      <div class="clog-empty" id="clogEmpty">No entries yet</div>
+    </div>
+    <div class="clog-input-wrap">
+      <input class="clog-name-inp" id="clogName" placeholder="Your name" maxlength="30">
+      <textarea class="clog-txt-inp" id="clogTxt" placeholder="Add update note..." rows="1" maxlength="500"></textarea>
+      <button class="clog-send" id="clogSend" onclick="addComment()">Post</button>
+    </div>
   </div>
 </div>
 
@@ -279,92 +327,14 @@ function setStatus(state, msg) {
   }
 }
 
-// Auto-refresh every 30s to pick up other people's changes
 let lastSaveTime = 0;
-setInterval(async () => {
-  if (Date.now() - lastSaveTime < 5000) return; // skip if just saved
-  const fresh = await ghLoad();
-  if (fresh && fresh.sections) {
-    S = fresh;
-    render();
-  }
-}, 30000);
 
 const KEY = 'rp_v4_cache'; // local cache only as fallback
 
-const DEF = { sections: [
-  { id:'s1', title:'1. eCommerce System Preparation', tf:'18–19 Apr', open:true, groups:[
-    { day:'18–19 Apr', phase:'System Readiness', tasks:[
-      { id:'t1', done:false, open:true, title:'Config STO Matrix (ecom-th) & SAP Reporting', pic:'EIO-SAP (Jakarut)', due:'18 Apr',
-        subs:[{t:'Confirm ความพร้อมกลับมาภายใน 18 Apr',d:false},{t:'POS STO & RSV Tracking Report พร้อมสำหรับ PVT แล้ว',d:false}]},
-      { id:'t2', done:false, open:true, title:'Checker & MP Report (ecom-th / ecom-cn)', pic:'CLE', due:'18 Apr',
-        subs:[{t:'Config posting date เป็นวันปัจจุบัน — พร้อม PVT',d:false},{t:'MP Report ทั้ง 2 ระบบ confirm พร้อมแล้ว',d:false}]},
-      { id:'t3', done:false, open:true, title:'Picking/Packing Process & Interface Packed Status', pic:'CLE / Operation', due:'18 Apr',
-        subs:[{t:'Picking/Packing ทุก Site พร้อมให้ WH/Logistics ทำ PVT วันที่ 20 Apr',d:false},{t:'เพิ่มการตรวจสอบ Interface Packed Status กลับไปยัง Platforms',d:false}]},
-      { id:'t4', done:false, open:false, title:'POS Online (Collection Point) ที่สนามบิน', pic:'CLE / Operation', due:'18 Apr',
-        subs:[{t:'Confirm พร้อมสำหรับ PVT แล้ว',d:false}]},
-    ]}
-  ]},
-  { id:'s2', title:'2. Test Plan eCommerce', tf:'17–20 Apr', open:true, groups:[
-    { day:'17–19 Apr', phase:'Prepare Test Scenarios', tasks:[
-      { id:'t5', done:false, open:true, title:'จัดทำ Test Scenarios เพิ่มเติม', pic:'PO (The Able) · GDB', due:'19 Apr',
-        subs:[{t:'Scenario 1: Full loop การซื้อขายจริง (ยกเว้นฝั่งจีน)',d:false},{t:'Scenario 2: Void ภายในวัน — ก่อนแพค (ทุก Platform) / หลังแพค (Firster, KP-CN)',d:false},{t:'Scenario 3: ซื้อแบบ GWP ของ KP.com และ Firster',d:false}]},
-      { id:'t6', done:false, open:false, title:'ประสาน PM อัพเดทความคืบหน้าช่วง Weekend', pic:'PO · PM', due:'19 Apr',
-        subs:[{t:'คุยเพิ่มเติมเรื่อง Article ที่ใช้ใน Test กับแต่ละ Channel',d:false}]},
-    ]},
-    { day:'20 Apr', phase:'PVT บน Production', tasks:[
-      { id:'t7', done:false, open:true, title:'PVT end-to-end บน Production — ทุก Scenario', pic:'PO / GDB / Logistics / Accounting / CLE / Operation', due:'20 Apr',
-        subs:[{t:'ทีมครบทุก function ร่วม PVT พร้อมกัน',d:false},{t:'PVT ต้องปรับเป็นการซื้อมากกว่า 24 ชม. เพื่อให้เป็น Stock ของ Warehouse',d:false}]},
-      { id:'t8', done:false, open:false, title:'Confirm next steps กับ EOI จากผล PVT', pic:'The Able · EOI · GDB', due:'20 Apr',
-        subs:[{t:'อัพเดท PM ความคืบหน้าและ issue ที่พบ',d:false}]},
-    ]}
-  ]},
-  { id:'s3', title:'3. Reconcile Order & Stock', tf:'18–20 Apr', open:true, groups:[
-    { day:'18–20 Apr', phase:'Sales Order Reconciliation', tasks:[
-      { id:'t9', done:false, open:true, title:'All Platform — Clear Sales Error & ยอดขาย Diff', pic:"P'Nan (SAP) · P'Aoy (Accounting)", due:'18 Apr',
-        subs:[{t:'ตรวจ Order ที่ไม่เข้า OMS (F1, Tiktok, THT, Home delivery)',d:false},{t:'Update Diff รายการ DMALL/JD (Non-Freezone) ก่อนนำเข้า SAP',d:false}]},
-      { id:'t10', done:false, open:true, title:"KPD Online — ส่งข้อมูล Resales Offline (Flight 24 Mar–24 Apr)", pic:"K'Jin (Shop) · K'Earth (GDB)", due:'18–19 Apr',
-        subs:[{t:'ส่งข้อมูลทุก Website / สนามบิน ให้ GDB Recheck',d:false},{t:"หลัง Recheck ส่งต่อให้ K'Peung, P'Ly, K'Nang ดำเนินการต่อ",d:false}]},
-      { id:'t11', done:false, open:true, title:'F1 / Tiktok / THT — Map SKU & Consolidate Order', pic:"K'Plug (PO) · P'Tai (GDB) · K'May (Logistics)", due:'18–19 Apr',
-        subs:[{t:'ส่งข้อมูล Order & Sales Amount ให้ GDB Map SKU',d:false},{t:'Consolidate แล้วส่งให้ Logistics ตรวจสอบ Record',d:false}]},
-      { id:'t12', done:false, open:true, title:'JD / Dmall — Map SKU & Reconcile Amount', pic:"N'Aom (PO CN) · P'Boy/P'Tai (GDB)", due:'18–19 Apr',
-        subs:[{t:'Dmall Freezone: reconcile กับ OMS ก่อน → Recheck order ที่ Amount Diff ~5,000 THB',d:false},{t:'JD: ดึง SKU & Quantity จาก item ใน Order แล้ว consolidate',d:false}]},
-      { id:'t13', done:false, open:false, title:'MJet — Resend ยอดขายที่ค้างใน OMS', pic:'Team SAP', due:'18 Apr',
-        subs:[{t:'OMS ส่งข้อมูลกลับ SAP ด้วย invoice no. ใหม่ → Clear รายการออก',d:false}]},
-    ]},
-    { day:'18–20 Apr', phase:'Stock Reconciliation', tasks:[
-      { id:'t14', done:false, open:false, title:'SAP Break Auto-gen STO → Manual Create STO ทุก Platform', pic:"P'Oat (SAP)", due:'18 Apr',
-        subs:[{t:'ทำก่อนเพื่อให้ทุก platform ใช้ Manual STO สำหรับ clear order เก่า',d:false}]},
-      { id:'t15', done:false, open:true, title:'Home Delivery — Manual gen STO & GI/GR', pic:"K'May (Logistics) · K'Mac (SAP)", due:'18–20 Apr',
-        subs:[{t:'ส่ง Excel record → Manual gen STO by order (confirm storage location ก่อน)',d:false},{t:'ทำ GI, GR WH/Shop บน SAP และ Pack บน POS',d:false}]},
-      { id:'t16', done:false, open:true, title:'F1 / Tiktok / THT — Manual gen STO & GI/GR', pic:"K'Mac (SAP) · K'May (Logistics)", due:'19–20 Apr',
-        subs:[{t:'Manual gen STO by order (STO ของ THT แยก import ก่อน Rekey)',d:false},{t:'ทำ GI, GR WH/Shop บน SAP และ Pack บน POS',d:false}]},
-      { id:'t17', done:false, open:true, title:'JD / Dmall — Manual gen STO & GI/GR', pic:"K'Mac (SAP) · K'May (Logistics)", due:'19–20 Apr',
-        subs:[{t:'Manual gen STO by order (confirm storage location ก่อน)',d:false},{t:'ทำ GI, GR WH/Shop บน SAP และ Pack บน POS',d:false}]},
-      { id:'t18', done:false, open:false, title:'KPD Online — ไม่ต้อง Gen STO ในรอบนี้', pic:'–', due:'25 Apr+',
-        subs:[{t:'Flight date ตั้งแต่ 25 Apr กลับมาใช้ Auto-gen STO ตามปกติ',d:false}]},
-      { id:'t19', done:false, open:true, title:'MJet — Manual gen STO + Backdate POS', pic:"K'Mac (SAP) · K'Jeab (Hub) · P'Keng (POS)", due:'19–21 Apr',
-        subs:[{t:'Manual gen STO → GI, GR WH/Hub บน SAP + Pack บน POS',d:false},{t:'Backdate POS สำหรับ Order ที่ไม่ได้ Pack ภายใน 4 เดือน (4/4/26)',d:false}]},
-    ]}
-  ]},
-  { id:'s4', title:'4. Final Check & Go-live', tf:'21–24 Apr', open:true, groups:[
-    { day:'21–22 Apr', phase:'Clear STO & Rekey', tasks:[
-      { id:'t20', done:false, open:true, title:'Clear STO ที่ค้างอยู่ทั้งหมด และ Rekey orders เข้าระบบ', pic:'The Able · Logistics · Shop · GDB · SAP', due:'22 Apr',
-        subs:[{t:'SAP Manual Create STO เพื่อ clear order เก่าทุกรายการ',d:false},{t:'Rekey = นำ Order ที่ Pack เรียบร้อยแล้วมาตัด Stock สินค้าบนระบบ',d:false}]},
-    ]},
-    { day:'23 Apr', phase:'System Readiness Final Check', tasks:[
-      { id:'t21', done:false, open:true, title:'Verify stock sync & price sync — ทุก Channel', pic:'The Able · GDB · Logistics', due:'23 Apr',
-        subs:[{t:'ตรวจ KP.com / Firster / KP-CN (Wechat, JD, Dmall) ครบทุก channel',d:false},{t:'Channel ใดพร้อมก่อน สามารถ go-live ได้ทันทีโดยไม่ต้องรอ 24 Apr',d:false}]},
-    ]},
-    { day:'24 Apr', phase:'Tentative Go-live', tasks:[
-      { id:'t22', done:false, open:false, title:'🟢 Online Channels Reopen — Tentative', pic:'All Teams', due:'24 Apr',
-        subs:[{t:'Channel ที่ confirm พร้อมจากการตรวจวันที่ 23 Apr proceed to go-live',d:false}]},
-    ]}
-  ]}
-]};
+// Data loaded from JSONBin only
 
-// State — start with cache, then overwrite from GitHub
-let S;
+// State — loaded from JSONBin only, no local predefined data
+let S = { sections: [] };
 function migrateState(raw) {
   raw.sections.forEach(sec => {
     if (!sec.tf) sec.tf = '';
@@ -374,10 +344,6 @@ function migrateState(raw) {
   });
   return raw;
 }
-try {
-  const sv = localStorage.getItem(KEY);
-  S = sv ? migrateState(JSON.parse(sv)) : JSON.parse(JSON.stringify(DEF));
-} catch(e) { S = JSON.parse(JSON.stringify(DEF)); }
 
 let ic = 1000;
 const uid = () => 'u'+(++ic)+'_'+Date.now();
@@ -397,8 +363,7 @@ function toggleTheme() { applyTheme(theme==='dark'?'day':'dark'); }
 // Save
 function saveData() {
   syncDOM();
-  try { localStorage.setItem(KEY, JSON.stringify(S)); toast('Saved ✓'); }
-  catch(e) { toast('Save failed'); }
+  // (localStorage removed — JSONBin only)
 }
 
 function syncDOM() {
@@ -628,6 +593,115 @@ function addSection() {
   setTimeout(()=>window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}),50);
 }
 
+// ── Comment Log ───────────────────────────────────────────────────────────
+function renderComments() {
+  const body = document.getElementById('clogBody');
+  const empty = document.getElementById('clogEmpty');
+  const count = document.getElementById('clogCount');
+  const comments = S.comments || [];
+  count.textContent = comments.length + ' entr' + (comments.length===1?'y':'ies');
+  // Remove existing items (keep empty placeholder)
+  body.querySelectorAll('.clog-item').forEach(el=>el.remove());
+  if (comments.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  // Render newest first
+  [...comments].reverse().forEach((c, ri) => {
+    const i = comments.length - 1 - ri;
+    const item = document.createElement('div');
+    item.className = 'clog-item';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'clog-avatar';
+    avatar.style.background = strColor(c.name || '?');
+    avatar.textContent = (c.name || '?').charAt(0);
+
+    const main = document.createElement('div');
+    main.className = 'clog-main';
+
+    const meta = document.createElement('div');
+    meta.className = 'clog-meta';
+
+    const name = document.createElement('span');
+    name.className = 'clog-name';
+    name.textContent = c.name || 'Anonymous';
+
+    const time = document.createElement('span');
+    time.className = 'clog-time';
+    time.textContent = formatTime(c.ts);
+
+    const tag = document.createElement('span');
+    tag.className = 'clog-tag ' + (c.type || 'note');
+    tag.textContent = c.type === 'save' ? '💾 saved' : '💬 note';
+
+    meta.appendChild(name); meta.appendChild(time); meta.appendChild(tag);
+
+    const text = document.createElement('div');
+    text.className = 'clog-text';
+    text.textContent = c.text;
+
+    main.appendChild(meta); main.appendChild(text);
+
+    const del = document.createElement('button');
+    del.className = 'clog-del'; del.textContent = '✕';
+    del.onclick = () => {
+      S.comments.splice(i, 1);
+      renderComments();
+    };
+
+    item.appendChild(avatar); item.appendChild(main); item.appendChild(del);
+    body.appendChild(item);
+  });
+  // Scroll to top (newest)
+  body.scrollTop = 0;
+}
+
+function strColor(str) {
+  const colors = ['#1a9e78','#1d6a9e','#7c3aed','#b86e00','#c0392b','#2874a6','#117a65'];
+  let hash = 0;
+  for (let i=0; i<str.length; i++) hash = str.charCodeAt(i) + ((hash<<5)-hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function formatTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getDate()}/${d.getMonth()+1} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function addComment(type='note', autoText='') {
+  const nameEl = document.getElementById('clogName');
+  const txtEl  = document.getElementById('clogTxt');
+  const name = nameEl.value.trim() || 'Anonymous';
+  const text = autoText || txtEl.value.trim();
+  if (!text) return;
+
+  if (!S.comments) S.comments = [];
+  S.comments.push({ id: uid(), name, text, type, ts: Date.now() });
+  renderComments();
+
+  if (!autoText) txtEl.value = '';
+  // Save name to localStorage for convenience
+  localStorage.setItem('clog_name', name);
+}
+
+// Auto-fill saved name
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('clog_name');
+  if (saved) document.getElementById('clogName').value = saved;
+});
+
+// Enter to send comment (Shift+Enter for newline)
+document.addEventListener('keydown', e => {
+  if (e.target.id === 'clogTxt' && e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    addComment();
+  }
+});
+
 function toast(msg) {
   const t=document.getElementById('toast'); t.textContent=msg;
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
@@ -635,24 +709,26 @@ function toast(msg) {
 
 async function saveData() {
   syncDOM();
-  localStorage.setItem(KEY, JSON.stringify(S));
+  // Log save entry automatically
+  const nameEl = document.getElementById('clogName');
+  const name = nameEl ? (nameEl.value.trim() || 'Anonymous') : 'Anonymous';
+  if (!S.comments) S.comments = [];
+  S.comments.push({ id: uid(), name, text: 'Saved plan update', type: 'save', ts: Date.now() });
+  renderComments();
   lastSaveTime = Date.now();
   await ghSave(S);
 }
 
-// Debounced auto-save
-document.addEventListener('input',()=>{ clearTimeout(window._st); window._st=setTimeout(saveData,2000); });
+// Auto-save disabled — use Save button to sync
 
-// Init: show cached data immediately, then load fresh from GitHub
-render();
+// Init: load from JSONBin, then render
 setStatus('loading');
 ghLoad().then(fresh => {
   if (fresh && fresh.sections) {
     S = migrateState(fresh);
-    render();
-  } else {
-    setStatus('ready');
   }
+  render();
+  renderComments();
 });
 </script>
 </body>
